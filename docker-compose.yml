@@ -1,0 +1,51 @@
+# Шлюз мессенджеров CRM walead: gateway (Telegram — Telethon, Max — PyMax) + WAHA (WhatsApp, движок GOWS).
+# В Coolify — одно приложение docker compose. Бэкенд ходит в шлюз по имени messenger-gateway
+# в сети coolify, шлюз в бэкенд — по xleads-backend. WAHA наружу не открыт
+services:
+  gateway:
+    build: .
+    restart: unless-stopped
+    environment:
+      BACKEND_URL: ${BACKEND_URL:-http://xleads-backend:3000}
+      GATEWAY_TOKEN: ${GATEWAY_TOKEN}
+      TELEGRAM_API_ID: ${TELEGRAM_API_ID}
+      TELEGRAM_API_HASH: ${TELEGRAM_API_HASH}
+      TG_PROXY_HOST_TEMPLATE: ${TG_PROXY_HOST_TEMPLATE:-{dashed}.sslip.io}
+      WAHA_URL: http://waha:3000
+      WAHA_API_KEY: ${WAHA_API_KEY}
+      SELF_URL: http://gateway:8080
+      DATA_DIR: /data
+    volumes:
+      - gateway-data:/data
+    depends_on:
+      - waha
+    networks:
+      default:
+      coolify:
+        aliases:
+          - messenger-gateway
+
+  waha:
+    image: devlikeapro/waha:latest
+    restart: unless-stopped
+    environment:
+      WAHA_API_KEY: ${WAHA_API_KEY}
+      WHATSAPP_DEFAULT_ENGINE: GOWS
+      WAHA_BASE_URL: http://waha:3000
+      WHATSAPP_RESTART_ALL_SESSIONS: "True"
+      WAHA_PRINT_QR: "False"
+      WAHA_DASHBOARD_ENABLED: "False"
+    volumes:
+      - waha-sessions:/app/.sessions
+      - waha-media:/app/.media
+    networks:
+      - default
+
+volumes:
+  gateway-data:
+  waha-sessions:
+  waha-media:
+
+networks:
+  coolify:
+    external: true
