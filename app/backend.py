@@ -23,7 +23,7 @@ def emit(event: dict[str, Any]) -> None:
 
 async def fetch_channels() -> list[dict[str, Any]]:
     async with httpx.AsyncClient(timeout=30) as client:
-        response = await client.get(f"{config.BACKEND_URL}/api/internal/crm-gateway/channels", headers=headers())
+        response = await client.get(f"{config.BACKEND_URL}/api/crm-internal/gateway/channels", headers=headers())
         response.raise_for_status()
         return response.json().get("channels", [])
 
@@ -40,7 +40,7 @@ async def sender_loop() -> None:
                 pending.append(_queue.get_nowait())
             try:
                 response = await client.post(
-                    f"{config.BACKEND_URL}/api/internal/crm-gateway/events",
+                    f"{config.BACKEND_URL}/api/crm-internal/gateway/events",
                     json={"events": pending},
                     headers=headers(),
                 )
